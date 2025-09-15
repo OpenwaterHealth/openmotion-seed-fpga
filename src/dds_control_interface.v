@@ -1,13 +1,21 @@
 `timescale 1ns / 1ps
 
 module dds_control_interface(
+	input        clk_d2,
 	input        clk,
     input        rstn,
  
-    input        test_mode,
-    input [15:0] dds_control_data,
-    input        dds_control_update,
+    input        trigger,
+    input        modulate_configurate,
+    input        modulate_enable,
+    input [27:0] modulate_frequency,
+    input [13:0] modulate_phrase,
 
+    output reg   start_modulate,
+    output reg   stop_modulate,
+    output reg   test,
+    output reg   sop,
+    output reg   eop,
     output       mosi,
     output reg   ss0,
     output reg   sck,
@@ -15,20 +23,25 @@ module dds_control_interface(
 
 	);
 	
-localparam IDLE      = 0;
-localparam WAIT      = 1;
-localparam SEND      = 2;
-localparam SCK_STATE = 3;
-localparam READY     = 4;
-localparam DONE      = 6;
+localparam IDLE       = 0;
+localparam WAIT       = 1;
+localparam SEND       = 2;
+localparam CONFIG_MOD = 3;
+localparam START      = 4;
+localparam STOP       = 5;
+localparam TRANSFER   = 6;
+localparam SCK_STATE  = 7;
+localparam DELAY      = 8;
+localparam DONE       = 9;
 		
-reg [3:0]  state=0,cstate=0,dac_state=0;
-reg [7:0]  count;
+reg [3:0]  state=0,cstate=0,config_state=0;
+reg [7:0]  count,wait_count;
 reg [15:0] data_temp;
 reg [15:0] data;
 reg        data_valid;
 reg        cw_data_valid;
 reg        data_valid_reset;
+reg [15:0] delay_count;
 
 reg        ss0_temp=1;
 reg        ss0_temp2=1;
@@ -40,17 +53,60 @@ reg        mod_data_select,cw_data_select;
 reg        mosi_reset;
 reg        ss0_temp_d,ss0_temp_dd,ss0_temp_dd2;
 reg [15:0] dds_control_reg;
+reg         modulate_enable_d,modulate_enable_d2;
+reg         trigger_d,trigger_d2;
+reg         sck_d,sck_d2,sck_d3;
 
 reg [15:0] dds_control_reg_old;
 reg         transfer_completed,transfer_completed_temp,transfer_completed_temp_d,transfer_completed_temp_d2;
 reg [3:0]  index=0;
-reg test_mode_d=0;
 
 reg transfer_done=0;
 reg transfer_completed_reset,test_run;
 
 assign mosi = mosi_temp;
 assign data_valid_dbg = data_valid_reset;
+
+
+always @(posedge clk or negedge rstn) begin
+		if (!rstn) begin
+             trigger_d <= 0;
+             trigger_d2 <= 0;
+             modulate_enable_d <= 0;
+             modulate_enable_d2 <= 0;
+        end else begin
+                      trigger_d <= trigger;
+                      trigger_d2 <= trigger_d;
+					  modulate_enable_d <= modulate_enable;
+		              modulate_enable_d2 <= modulate_enable_d;
+                 end
+end
+
+always @(posedge clk_d2 or negedge rstn) begin
+		if (!rstn) begin
+             sck_d2 <= 1;
+        end else begin
+                      sck_d2 <= sck_d | ss0_temp;
+                 end
+end
+
+
+always @(negedge clk_d2 or negedge rstn) begin
+		if (!rstn) begin
+             sck_d3 <= 1;
+        end else begin
+                      sck_d3 <= sck_d2;
+                 end
+end
+
+always @(posedge clk_d2 or negedge rstn) begin
+		if (!rstn) begin
+             sck <= 1;
+        end else begin
+                      sck <= sck_d3;
+                 end
+end
+
 
 always @(negedge clk or negedge rstn) begin
 		if (!rstn) begin
@@ -61,6 +117,7 @@ always @(negedge clk or negedge rstn) begin
                       ss0_temp_dd2 <= ss0_temp_dd;
                  end
 end
+
 
 always @(negedge clk or negedge rstn) begin
 		if (!rstn) begin
@@ -75,10 +132,10 @@ end
 always @(posedge clk or negedge rstn) begin
 		if (!rstn) begin
              ss0_temp2 <= 1;
-             sck <= 0;
+             sck_d <= 0;
         end else begin
                       ss0_temp2 <= ss0_temp_dd | ss0_temp;
-                      sck <= sck_temp2;
+                      sck_d <= !sck_temp2;
                  end
 end
 
@@ -142,7 +199,7 @@ always @(posedge clk or negedge rstn) begin
 	end
 
 always @(negedge sck_temp or negedge rstn or posedge mosi_reset or posedge transfer_completed_reset) begin
-		if (!rstn | mosi_reset) begin
+		if (!rstn | mosi_reset | transfer_completed_reset) begin
              count <= 15;
              mosi_temp <= 0;
              data_temp <= 0;
@@ -174,40 +231,102 @@ always @(negedge sck_temp or negedge rstn or posedge mosi_reset or posedge trans
 		        end
 end
 
-always @(posedge clk or negedge rstn or posedge data_valid_reset) begin
-    if (!rstn | data_valid_reset) begin
+always @(posedge clk or negedge rstn) begin
+    if (!rstn) begin
          transfer_completed_reset <= 0;
+         modulate_enable_d <= 0;
+         sop <= 0;
+         eop <= 0;
          data <= 0;
          data_valid <= 0;
-         test_run <= 0;
+         start_modulate <= 0;
+         stop_modulate <= 0;
+         delay_count <= 0;
+         index <= 0;
+         test <= 0;
+		 config_state <= IDLE;
     end else begin
-		         test_mode_d <= test_mode;
-		         test_run <= !test_mode_d & test_mode;
-                 if (test_mode & !transfer_done) begin
-					 if (transfer_completed_temp_d | test_run) begin
-						 if (index <5) begin
-							 data_valid <= 1;
-							 index <= index + 1;
-					     end else begin
-									data_valid <= 0;
-									transfer_done <= 1;
-								  end
-						 case (index)
-							   0 : data <= 16'h0021;
-							   1 : data <= 16'hc75f;
-							   2 : data <= 16'h0040;
-							   3 : data <= 16'h00c0;
-							   4 : data <= 16'h0020;
-					     default : transfer_done <= 1;
-						 endcase
-					 end else data_valid <= 0; 
-				 end else begin
-							transfer_completed_reset <= 0;
-							 if (dds_control_update) begin
-								 data <= dds_control_data;
-								 data_valid <= 1;
-							 end  
-					      end
+		         modulate_enable_d <= modulate_enable;
+				 case (config_state)
+					  IDLE : begin
+						        start_modulate <= 0;
+						        stop_modulate <= 0;
+						        data_valid <= 0;
+						        if (modulate_configurate) config_state <= CONFIG_MOD;
+						        if (!trigger_d2 & trigger_d) begin
+									sop <= 1;
+									config_state <= DELAY;
+								end
+						        if (!trigger_d & trigger_d2) begin
+									eop <= 1;
+									config_state <= DELAY;
+								end
+						     end
+				     DELAY : begin
+						        if (delay_count > 16'h0055) begin
+									delay_count <= 0;
+									if (sop) begin
+										sop <= 0;
+										config_state <= START;
+								    end
+									if (eop) begin
+										eop <= 0;
+										config_state <= STOP;
+								    end
+						        end else delay_count <= delay_count + 1;
+						     end
+				     START : begin
+								if (modulate_enable_d2) begin
+									data <= 16'h2002;
+									data_valid <= 1;
+									start_modulate <= 1;
+									config_state <= IDLE;
+								end else begin
+												config_state <= IDLE;
+												data_valid <= 0;
+										 end
+						     end
+				      STOP : begin
+						        test <= trigger;
+									data <= 16'h2100;
+									data_valid <= 1;
+									stop_modulate <= 1;
+									config_state <= IDLE;
+						     end
+				  CONFIG_MOD : begin //2
+						        test <= 0;
+						        transfer_completed_reset <= 0;
+								 if (index <5) begin
+									 data_valid <= 1;
+									 case (index)
+									    0 : data <= 16'h2100;
+								        1 : data <= {2'h1,modulate_frequency[13:0]};		// Frequency (LSB)
+								        2 : data <= {2'h1,modulate_frequency[27:14]};		// Frequency (MSB)
+								        3 : data <= {2'h3,modulate_phrase[13:0]};		    // phrase
+								        4 : data <= 16'h2002;    // Triangle
+								  default : config_state <= IDLE;
+								 endcase
+								    index <= index + 1;
+								    config_state <= TRANSFER;
+								end else begin
+									            index <= 0;
+												config_state <= IDLE;
+										 end
+							 end 
+
+			     TRANSFER : begin //3
+						        test <= 0;
+					             data_valid <= 0;
+								 if (transfer_completed_temp) begin
+									 transfer_completed_reset <= 1;
+									 config_state <= CONFIG_MOD;
+							     end
+							 end 
+				     DONE : begin //6
+						        test <= 0;
+							    config_state <= IDLE;
+						    end 
+				endcase
              end
 end
 

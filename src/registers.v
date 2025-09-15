@@ -21,11 +21,12 @@ module registers(
     input [7:0]     	ID,
 
 
-    output reg [15:0] dds_control,
     output reg [15:0] dds_gain,
     output reg [15:0] cw_gain,
     output reg [15:0] dds_current_limit,
     output reg [15:0] cw_current_limit,
+    output     [27:0] modulate_frequency,
+    output     [13:0] modulate_phrase,
     output reg        dds_gain_update,
     output reg        cw_gain_update,
     output reg        dds_current_limit_update,
@@ -63,6 +64,8 @@ reg				skip_cnt;
 reg [3:0]      count;
 reg             data_vld_dly;
 reg [3:0]      update_count;
+reg [31:0]      modulate_frequency_temp;
+reg [15:0]      modulate_phrase_temp;
 
 //Parameters
 parameter		s0_r_w				=	2'b00;			// check if the request is read or write.
@@ -77,6 +80,10 @@ assign	data_to_i2c = (r_w) ? data_out : 8'h00;
 assign	wr_en_i = ((data_vld) && (~r_w) && (byte_cnt == 1)) ? 1'b1 : 1'b0; // Write Enable control
 assign stretch_on = stretch_wire;
 
+
+assign modulate_frequency = modulate_frequency_temp[27:0];
+assign modulate_phrase = modulate_phrase_temp[13:0];
+
 /**********************************************************************************
 * Simple Write Registers
 **********************************************************************************/
@@ -84,7 +91,6 @@ always @ (posedge clk or posedge rst) begin
 	if (rst) begin
 	    count <= 0;
 	    update_count <= 0;
-	    dds_control <= 0;
 		dds_gain <=0;
 		cw_gain <= 16'h0000;
 		dds_gain <=0;
@@ -92,16 +98,18 @@ always @ (posedge clk or posedge rst) begin
 		cw_gain_update <=0;
 		dds_current_limit_update <=0;
 		cw_current_limit_update <=0;
-
-		dds_current_limit <=16'h3dae;
-		cw_current_limit <= 16'h523d;
+		
+		dds_current_limit <=16'he77b;    // Limit 80mA
+		cw_current_limit <= 16'h1d12;    // limit 160mA
+	    modulate_frequency_temp <= 28'h012000;		// 0x015000; 0x010000 = 250uS
+	    modulate_phrase_temp <= 14'h0;
 		dds_mon_current_limit <=0;
 		cw_mon_current_limit <= 0;
 		control <=0;
 		static_control <=0;
 	end else begin
 		       if (control > 0) begin
-				   if (count > 1) begin
+				   if (count > 2) begin
 					   count <= 0;
 					   control <= 0;
 				   end else count <= count + 1;
@@ -137,19 +145,19 @@ always @ (posedge clk or posedge rst) begin
 
 			   if (wr_en_i) begin
 				   case (addr_i)
-						 8'h0 : dds_control[7:0]  		  <= i2c_to_data;
-					     8'h1 : dds_control[15:8] 		  <= i2c_to_data;
-					     8'h2 : dds_gain[7:0]     		  <= i2c_to_data;
+						 8'h0 : modulate_phrase_temp[7:0]  	 <= i2c_to_data;
+					     8'h1 : modulate_phrase_temp[15:8] 	 <= i2c_to_data;
+					     8'h2 : dds_gain[7:0]     		  		<= i2c_to_data;
 						 8'h3 : begin
-									dds_gain[15:8]    	   <= i2c_to_data;
-									dds_gain_update        <= 1;
+									dds_gain[15:8]    	   		<= i2c_to_data;
+									dds_gain_update        		<= 1;
 								end
-						 8'h4 : cw_gain[7:0]             <= i2c_to_data;
+						 8'h4 : cw_gain[7:0]             		<= i2c_to_data;
 						 8'h5 : begin
-									cw_gain[15:8]        <= i2c_to_data;
-									cw_gain_update        <= 1;
+									cw_gain[15:8]        		<= i2c_to_data;
+									cw_gain_update        		<= 1;
 								end
-						 8'h6 : dds_current_limit[7:0]      <= i2c_to_data;
+						 8'h6 : dds_current_limit[7:0]      	<= i2c_to_data;
 						 8'h7 : begin
 									dds_current_limit[15:8]   <= i2c_to_data;
 									dds_current_limit_update   <= 1;
@@ -159,14 +167,14 @@ always @ (posedge clk or posedge rst) begin
 									cw_current_limit[15:8]   <= i2c_to_data;
 									cw_current_limit_update   <= 1;
 								end
-					     8'hA : dds_mon_current_limit[7:0]  <= i2c_to_data;
-						 8'hB : dds_mon_current_limit[15:8] <= i2c_to_data;
-					     8'hC : cw_mon_current_limit[7:0]   <= i2c_to_data;
-					     8'hD : cw_mon_current_limit[15:8]  <= i2c_to_data;
-					    8'h20 : static_control[7:0]  	     <= i2c_to_data;
-				   	    8'h21 : static_control[15:8] 		 <= i2c_to_data;
-					    8'h22 : control[7:0]  			     <= i2c_to_data;
-					    8'h23 : control[15:8] 			     <= i2c_to_data;
+					     8'hA : modulate_frequency_temp[7:0]    <= i2c_to_data;
+						 8'hB : modulate_frequency_temp[15:8]   <= i2c_to_data;
+					     8'hC : modulate_frequency_temp[23:0]   <= i2c_to_data;
+					     8'hD : modulate_frequency_temp[31:24]  <= i2c_to_data;
+					    8'h20 : static_control[7:0]  	     	<= i2c_to_data;
+				   	    8'h21 : static_control[15:8] 		 	<= i2c_to_data;
+					    8'h22 : control[7:0]  			     	<= i2c_to_data;
+					    8'h23 : control[15:8] 			     	<= i2c_to_data;
 					endcase
 				end
 			end
@@ -184,8 +192,8 @@ always @ (posedge clk or posedge rst) begin
 	else 
 		begin
 		        case (addr_i)
-					  8'h0 : data_out <= dds_control[7:0];
-					  8'h1 : data_out <= dds_control[15:8];
+					  8'h0 : data_out <= modulate_phrase_temp[7:0];
+					  8'h1 : data_out <= modulate_phrase_temp[15:8];
 					  8'h2 : data_out <= dds_gain[7:0];
 					  8'h3 : data_out <= dds_gain[15:8];
 					  8'h4 : data_out <= cw_gain[7:0];
@@ -194,10 +202,10 @@ always @ (posedge clk or posedge rst) begin
 					  8'h7 : data_out <= dds_current_limit[15:8];
 					  8'h8 : data_out <= cw_current_limit[7:0];
 					  8'h9 : data_out <= cw_current_limit[15:8];
-					  8'hA : data_out <= dds_mon_current_limit[7:0];
-					  8'hB : data_out <= dds_mon_current_limit[15:8];
-					  8'hC : data_out <= cw_mon_current_limit[7:0];
-					  8'hD : data_out <= cw_mon_current_limit[15:8];
+					  8'hA : data_out <= modulate_frequency_temp[7:0];
+					  8'hB : data_out <= modulate_frequency_temp[15:8];
+					  8'hC : data_out <= modulate_frequency_temp[23:16];
+					  8'hD : data_out <= modulate_frequency_temp[31:24];
 					  8'hE : data_out <= adc_current_data[7:0];
 					  8'hF : data_out <= adc_current_data[15:8];
 				     8'h10 : data_out <= adc_voltage_data[7:0];
@@ -207,7 +215,6 @@ always @ (posedge clk or posedge rst) begin
 					 8'h14 : data_out <= minor;
 					 8'h15 : data_out <= major;
 					 8'h16 : data_out <= ID;
-
 
 					 8'h20 : data_out <= static_control[7:0];
 					 8'h21 : data_out <= static_control[15:8];

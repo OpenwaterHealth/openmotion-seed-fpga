@@ -33,12 +33,13 @@ module i2c_slave_top(
     input [7:0]   major,
     input [7:0]   ID,
 
-    output [15:0] dds_control,
     output [15:0] dds_gain,
     output [15:0] cw_gain,
     output [15:0] dds_current_limit,
     output [15:0] cw_current_limit,
-	
+    output [27:0] modulate_frequency,
+    output [13:0] modulate_phrase,
+
     output        dds_gain_update,
     output        cw_gain_update,
     output        dds_current_limit_update,
@@ -99,9 +100,11 @@ registers registers(
 	.major 				    (major),
 	.ID 				    (ID),
 
-	.dds_control 			(dds_control),
 	.dds_gain 				(dds_gain),
 	.cw_gain 				(cw_gain),
+	.modulate_frequency     (modulate_frequency),
+	.modulate_phrase        (modulate_phrase),
+	
 	.dds_current_limit 		(dds_current_limit),
 	.cw_current_limit 		(cw_current_limit),
 	
