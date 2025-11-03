@@ -119,37 +119,15 @@ prj_project close
 
 
 
-<A name="pn250408232215"></A><B><U><big>pn250408232215</big></U></B>
-#Start recording tcl command: 4/4/2025 14:00:41
-#Project Location: C:/Project/Working/FPGA/HOME/Lattice/Seed_Driver/Rev_5; Project name: seed_driver
-prj_project open "C:/Project/Working/FPGA/HOME/Lattice/Seed_Driver/Rev_5/seed_driver.ldf"
-pgr_project close
-pgr_project open "C:/Project/Working/FPGA/HOME/Lattice/Seed_Driver/Rev_5/impl1/impl1.xcf"
-pgr_program run
-pgr_project save "C:/Project/Working/FPGA/HOME/Lattice/Seed_Driver/Rev_5/impl1/impl1.xcf"
+<A name="pn251103131202"></A><B><U><big>pn251103131202</big></U></B>
+#Start recording tcl command: 11/3/2025 13:10:32
+#Project Location: C:/Users/Henry Tang/Documents/GitHub/motion-seed-fpga; Project name: seed_driver
+prj_project open "C:/Users/Henry Tang/Documents/GitHub/motion-seed-fpga/seed_driver.ldf"
 prj_run Export -impl impl1 -task Jedecgen -forceAll
-pgr_project save "C:/Project/Working/FPGA/HOME/Lattice/Seed_Driver/Rev_5/impl1/impl1.xcf"
+prj_src add "C:/Users/Henry Tang/Documents/GitHub/motion-seed-fpga/PLL.ipx"
 prj_project save
 prj_project close
-#Stop recording: 4/8/2025 23:22:15
-
-
-
-<A name="pn250428132935"></A><B><U><big>pn250428132935</big></U></B>
-#Start recording tcl command: 4/28/2025 13:24:16
-#Project Location: D:/CURRENT-WORK/openwater/motion-seed-fpga; Project name: seed_driver
-prj_project open "D:/CURRENT-WORK/openwater/motion-seed-fpga/seed_driver.ldf"
-prj_run Export -impl impl1 -forceAll
-prj_run Export -impl impl1
-prj_run Export -impl impl1
-prj_src remove "D:/CURRENT-WORK/openwater/motion-seed-fpga/TestBench/top_tb.v"
-prj_src remove "D:/CURRENT-WORK/openwater/motion-seed-fpga/TestBench/tb_defines.v"
-prj_src remove "D:/CURRENT-WORK/openwater/motion-seed-fpga/TestBench/i2c_master.v"
-prj_run Export -impl impl1
-prj_run Export -impl impl1
-prj_project save
-prj_project close
-#Stop recording: 4/28/2025 13:29:35
+#Stop recording: 11/3/2025 13:12:02
 
 
 
