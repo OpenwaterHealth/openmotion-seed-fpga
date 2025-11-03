@@ -7,8 +7,8 @@ module dds_gain_control(
     input [15:0] dds_gain,
     input [15:0] cw_gain,
 
-    input [15:0] dds_current_limit,
-    input [15:0] cw_current_limit,
+    input [15:0] dds_current_limit,    //16'h1072;    // Limit 80mA
+    input [15:0] cw_current_limit,     //16'h20e5;    // limit 160mA
 
     input        dds_gain_update,
     input        cw_gain_update,
@@ -57,7 +57,7 @@ reg [15:0] cw_current_limit_reg;
 reg dds_gain_update_d1,cw_gain_update_d1;
 reg [15:0] dds_gain_reg_old;
 reg [15:0] cw_gain_reg_old;
-	
+
 assign ss = ss1_temp;
 assign sck = sck_temp;
 assign mosi = mosi_temp;
@@ -72,10 +72,11 @@ reg ss1_temp_d;
 always @(posedge clk or negedge rstn) begin
     begin
           if (!rstn) begin
-               dds_gain_reg <= 16'h6050;
-               cw_gain_reg <= 16'h0;
+               dds_gain_reg <= 16'h0;
+             //  dds_gain_reg <= 16'h3050;
+               cw_gain_reg <= 16'h088a;
                dds_gain_d1 <= 16'h0;
-               cw_gain_d1 <= 16'h0;
+               cw_gain_d1 <= 16'h088a;
                dds_gain_update_d1 <= 0;
                cw_gain_update_d1 <= 0;
           end else begin
@@ -86,6 +87,9 @@ always @(posedge clk or negedge rstn) begin
                          if (dds_gain_update_d1) begin
                              if (dds_gain_d1 < dds_current_limit_reg) begin
                                  dds_gain_reg <= dds_gain_d1;
+                               //  dds_gain_reg <= dds_gain_d1+16'ha000;			// 0xA000 + 0    = 3.187V = 150mA
+																				// 0xA000 + 1200 = 4.6V
+																				// 0xA000 + 1400 = 4.85V
                              end
                          end
                          if (cw_gain_update_d1) begin
@@ -213,19 +217,20 @@ end
 
 always @(posedge clk or negedge rstn) begin
     if (!rstn) begin
-        dds_current_limit_reg <= 16'hffff;
-        cw_current_limit_reg <= 16'hffff;
+        dds_current_limit_reg <= 16'h1072;    // Limit 80mA
+        cw_current_limit_reg <= 16'h20e5;    // limit 160mA
     end else begin
                  if (dds_current_limit_update) dds_current_limit_reg <= dds_current_limit;
-                 if (cw_current_limit_update)  cw_current_limit_reg <= cw_current_limit;
+                 if (cw_current_limit_update) cw_current_limit_reg <= cw_current_limit;
              end
 end
+
 
 always @(posedge clk or negedge rstn or posedge data_valid_reset) begin
     if (!rstn | data_valid_reset) begin
          data <= 0;
          data_valid <= 0;
-    end else begin
+    end else begin					 
                  if (dds_gain_update_d1) begin
                      data <= {WRITE_UPDATE_DAC_CHANNEL,4'h1,dds_gain_reg};
 					 data_valid <= 1;

@@ -21,6 +21,7 @@
 module reset_generator( 
     input  rstn,
     input  clk,
+    input  lock,
 
     output reset_n
 );

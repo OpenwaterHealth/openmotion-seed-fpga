@@ -21,13 +21,13 @@ module top(
     input     rstn,                 	// Pin 34
     input     system_reset_n,         	// Pin 97
 
-    input     clk_10mhz,              	// Pin 1
+    input     clk_25mhz,              	// Pin 1
 	
 	output    seed_mod_mosi,        	// Pin 29    
 	output    seed_mod_sck,         	// Pin 30
 	output    seed_mod_ss,          	// Pin 32
 	
-	output    seed_laser_disable,   	// Pin 17
+	//output    seed_laser_disable,   	// Pin 17
 	output    seed_laser_en_led_n,    	// Pin 74
 
 	input     seed_adc_sdo1,        	// Pin 10
@@ -38,8 +38,9 @@ module top(
     inout     scl,             		// Pin 18
     inout     sda,             		// Pin 19
 
+	input     trigger,        	        // Pin 17//
 	input     seed_compared,        	// Pin 28
-	output    over_current_shutdown_n,  // Pin 48
+	output    over_current_shutdown_n, // Pin 48
 	
 	output    seed_dac_mosi,        	// Pin 20
 	output    seed_dac_ss,          	// Pin 21
@@ -75,12 +76,18 @@ wire [15:0] adc_voltage_data;
 wire [15:0] adc_current_data;
 wire [7:0]  status;
 
-wire [15:0] dds_control;
+wire [15:0] modulate_delay;
 wire [15:0] dds_gain;
 wire [15:0] cw_gain;
 wire [15:0] dds_current_limit;
 wire [15:0] cw_current_limit;
 wire [15:0] adc_current_limit;
+wire [27:0] modulate_frequency;
+wire [13:0] modulate_phrase;
+
+wire modulate_configurate;
+wire modulate_enable;
+
 wire [15:0] static_control;
 wire [15:0] control;
 wire        over_current_limit;
@@ -89,7 +96,6 @@ wire [7:0]  minor;
 wire [7:0]  major;
 wire [7:0]  ID;
 
-wire dds_control_update;
 wire dds_mon_current_update;
 wire cw_mon_current_update;
 
@@ -116,19 +122,24 @@ wire [7:0] data_out;
 wire data_valid_dbg;
 wire auto_run;
 wire test_mode;
+wire lock;
+wire clkx2;
 
-assign dds_control_update       = control[0];
+wire start_modulate,stop_modulate;
+wire sop,eop;
+wire test;
+
+assign modulate_configurate     = control[0];
 assign mcu_gpio                 = control[15];
 
-
-assign laser_active             = static_control[0];
-assign dds_cw_mode_select       = static_control[1];
+assign modulate_enable          = static_control[0];
+assign laser_active             = static_control[1];
 assign auto_run                 = static_control[4];
 assign test_mode                = static_control[7];
 
 assign over_current_shutdown_n  = !(over_current_limit);
 assign seed_laser_en_led_n  = !laser_active;
-assign seed_laser_disable = !(over_current_limit);   // disable= LOW
+//assign seed_laser_disable = !(over_current_limit);   // disable= LOW
 
 //assign seed_spare4              = dds_gain_update;
 //assign seed_spare2              = seed_adc_sdo1;
@@ -136,8 +147,11 @@ assign seed_laser_disable = !(over_current_limit);   // disable= LOW
 //assign seed_spare1              = seed_adc_sck;
 //assign seed_spare2              = seed_adc_convert;
 //assign seed_spare1              = seed_ldac_n;
-//assign seed_spare2              = seed_mod_mosi;
-//assign seed_spare3              = seed_mod_ss;
+//assign seed_spare1              = trigger;
+//assign seed_spare2              = test;
+//assign seed_spare2              = start_modulate;
+//assign seed_spare3              = stop_modulate;
+//assign seed_spare4              = sop;
 //assign seed_spare4              = seed_mod_sck;
 
 
@@ -155,10 +169,9 @@ assign spare_led2_n             = 0;
 
 assign status = {4'h0,system_reset_n,laser_active,seed_compared,over_current_limit};
 
-assign buf_clk = clk_10mhz;
 assign buf_rstn = rstn  & system_reset_n;
 assign seed_reset_n = 1;
-assign revision = 8'h3;
+assign revision = 8'h5;
 assign minor    = 8'h0;
 assign major    = 8'h0;
 assign ID       = 8'h1;
@@ -166,7 +179,16 @@ assign ID       = 8'h1;
 reset_generator reset_generator( 
     .rstn      (rstn),
     .clk       (buf_clk),
+    .lock      (lock),
     .reset_n   (reset_n)
+);
+
+PLL PLL( 
+    .RST    (!rstn),
+    .CLKI   (clk_25mhz),
+    .CLKOP  (buf_clk),
+    .CLKOS  (clkx2),
+    .LOCK   (lock)
 );
 
 heart_beat heart_beat( 
@@ -176,99 +198,106 @@ heart_beat heart_beat(
 );
 
 i2c_slave_top i2c_slave_top (
-	.rstn 					(reset_n),
-	.clk 					(buf_clk),
+	.rstn 							(reset_n),
+	.clk 							(buf_clk),
 	
-	.scl 					(scl),
-	.sda 					(sda),
+	.scl 							(scl),
+	.sda 							(sda),
 	
-    .adc_voltage_data 		(adc_voltage_data),
-    .adc_current_data 		(adc_current_data),
-    .monitor_status 		(monitor_status),
-    .status 				(status),
+    .adc_voltage_data 				(adc_voltage_data),
+    .adc_current_data 				(adc_current_data),
+    .monitor_status 				(monitor_status),
+    .status 						(status),
 	
-	.revision 				(revision),
-	.minor 				    (minor),
-	.major 				    (major),
-	.ID 				    (ID),
+	.revision 						(revision),
+	.minor 				    		(minor),
+	.major 				    		(major),
+	.ID 				    		(ID),
 
-    .dds_control 			(dds_control),
-    .dds_gain 				(dds_gain),
-    .cw_gain 				(cw_gain),
-    .dds_current_limit 		(dds_current_limit),
-    .cw_current_limit 		(cw_current_limit),
-	
-    .dds_gain_update 		   (dds_gain_update),
-    .cw_gain_update 		   (cw_gain_update),
-    .dds_current_limit_update (dds_current_limit_update),
-    .cw_current_limit_update  (cw_current_limit_update),
-    .dds_mon_current_limit_update (dds_mon_current_limit_update),
-    .cw_mon_current_limit_update  (cw_mon_current_limit_update),
+    .dds_gain 						(dds_gain),
+    .cw_gain 						(cw_gain),
+    .dds_current_limit 				(dds_current_limit),
+    .cw_current_limit 				(cw_current_limit),
+    .modulate_frequency    			(modulate_frequency),
+    .modulate_phrase    			(modulate_phrase),
+    .dds_gain_update 		   		(dds_gain_update),
+    .cw_gain_update 		   		(cw_gain_update),
+    .dds_current_limit_update 		(dds_current_limit_update),
+    .cw_current_limit_update  		(cw_current_limit_update),
+    .dds_mon_current_limit_update 	(dds_mon_current_limit_update),
+    .cw_mon_current_limit_update  	(cw_mon_current_limit_update),
 
-    .dds_mon_current_limit 	(dds_mon_current_limit),
-    .cw_mon_current_limit 	(cw_mon_current_limit),
-    .control 	            (control),
-    .static_control 	    (static_control)
+    .dds_mon_current_limit 			(dds_mon_current_limit),
+    .cw_mon_current_limit 			(cw_mon_current_limit),
+    .control 	            		(control),
+    .static_control 	    		(static_control)
 
 );
  
 dds_gain_control dds_gain_control(
-    .rstn               (reset_n),
-    .clk                (buf_clk),
+    .rstn               		(reset_n),
+    .clk                		(buf_clk),
 
-    .dds_gain           (dds_gain),
-    .cw_gain            (cw_gain),
-    .dds_current_limit  (dds_current_limit),
-    .cw_current_limit   (cw_current_limit),
+    .dds_gain           		(dds_gain),
+    .cw_gain            		(cw_gain),
+    .dds_current_limit  		(dds_current_limit),
+    .cw_current_limit   		(cw_current_limit),
 
-    .dds_gain_update          (dds_gain_update),
-    .cw_gain_update           (cw_gain_update),
-    .dds_current_limit_update (dds_current_limit_update),
-    .cw_current_limit_update  (cw_current_limit_update),
+    .dds_gain_update          	(dds_gain_update),
+    .cw_gain_update           	(cw_gain_update),
+    .dds_current_limit_update 	(dds_current_limit_update),
+    .cw_current_limit_update  	(cw_current_limit_update),
 
-    .mosi               (seed_dac_mosi),
-    .ss                 (seed_dac_ss),
-    .sck                (seed_dac_sck),
-    .ldac_n             (seed_ldac_n)
+    .mosi               		(seed_dac_mosi),
+    .ss                 		(seed_dac_ss),
+    .sck                		(seed_dac_sck),
+    .ldac_n             		(seed_ldac_n)
 	);
 
 
 dds_control_interface dds_control_interface(
-    .rstn               (reset_n),
-    .clk                (buf_clk),
+    .rstn               	(reset_n),
+    .clk_d2                	(buf_clk),
+    .clk                	(clkx2),
 
-    .test_mode          (test_mode),
+    .trigger        	  	(trigger),
+    .modulate_configurate 	(modulate_configurate),
+    .modulate_enable      	(modulate_enable),
+    .modulate_frequency   	(modulate_frequency),
+    .modulate_phrase    	(modulate_phrase),
 
-    .dds_control_data   (dds_control),
-    .dds_control_update (dds_control_update),
-
-    .mosi               (seed_mod_mosi),
-    .ss0                (seed_mod_ss),
-    .sck                (seed_mod_sck),
-	.data_valid_dbg     (data_valid_dbg)
+    .test        			(test),
+    .sop        			(sop),
+    .eop			        (eop),
+    .start_modulate        (start_modulate),
+    .stop_modulate         (stop_modulate),
+    .mosi               	(seed_mod_mosi),
+    .ss0                	(seed_mod_ss),
+    .sck                	(seed_mod_sck),
+	.data_valid_dbg     	(data_valid_dbg)
 	);
 
 
 adc_control adc_control( 
-    .rstn                   (reset_n),
-    .clk                    (buf_clk),
+    .rstn                   		(reset_n),
+    .clk                    		(buf_clk),
 
-    .adc_sdo1               (seed_adc_sdo1),
-    .adc_sdo2               (seed_adc_sdo2),
-    .dds_cw_mode_select     (dds_cw_mode_select),
-    .dds_mon_current_limit  (dds_mon_current_limit),
-    .cw_mon_current_limit   (cw_mon_current_limit),
-    .dds_mon_current_limit_update (dds_mon_current_limit_update),
-    .cw_mon_current_limit_update  (cw_mon_current_limit_update),
-    .adc_status_clear       (adc_status_clear),
+    .adc_sdo1               		(seed_adc_sdo1),
+    .adc_sdo2               		(seed_adc_sdo2),
+    .dds_cw_mode_select     		(dds_cw_mode_select),
+    .dds_mon_current_limit  		(dds_mon_current_limit),
+    .cw_mon_current_limit   		(cw_mon_current_limit),
+    .dds_mon_current_limit_update 	(dds_mon_current_limit_update),
+    .cw_mon_current_limit_update  	(cw_mon_current_limit_update),
+    .adc_status_clear       		(adc_status_clear),
 
-    .adc_data_valid         (adc_data_valid),
-    .adc_voltage_data       (adc_voltage_data),
-    .adc_current_data       (adc_current_data),
-    .adc_sck                (seed_adc_sck),
-    .adc_convert            (seed_adc_convert),
+    .adc_data_valid         		(adc_data_valid),
+    .adc_voltage_data       		(adc_voltage_data),
+    .adc_current_data       		(adc_current_data),
+    .adc_sck                		(seed_adc_sck),
+    .adc_convert            		(seed_adc_convert),
 
-    .monitor_status         (monitor_status)
+    .monitor_status         		(monitor_status)
 
 );
 
