@@ -35,39 +35,6 @@ prj_project close
 
 
 
-<A name="pn250326115846"></A><B><U><big>pn250326115846</big></U></B>
-#Start recording tcl command: 3/24/2025 10:35:29
-#Project Location: C:/Project/Working/FPGA/HOME/Lattice/Seed_Driver/Rev_4; Project name: seed_driver
-prj_project open "C:/Project/Working/FPGA/HOME/Lattice/Seed_Driver/Rev_4/seed_driver.ldf"
-pgr_project close
-prj_run Export -impl impl1 -task Jedecgen -forceAll
-pgr_project open "C:/Project/Working/FPGA/HOME/Lattice/Seed_Driver/Rev_4/impl1/impl1.xcf"
-pgr_program run
-pgr_project save "C:/Project/Working/FPGA/HOME/Lattice/Seed_Driver/Rev_4/impl1/impl1.xcf"
-prj_run Export -impl impl1 -task Jedecgen -forceAll
-pgr_project save "C:/Project/Working/FPGA/HOME/Lattice/Seed_Driver/Rev_4/impl1/impl1.xcf"
-pgr_project close
-pgr_project open "C:/Project/Working/FPGA/HOME/Lattice/Seed_Driver/Rev_4/impl1/impl1.xcf"
-pgr_program run
-pgr_project save "C:/Project/Working/FPGA/HOME/Lattice/Seed_Driver/Rev_4/impl1/impl1.xcf"
-prj_project save
-prj_project close
-#Stop recording: 3/26/2025 11:58:46
-
-
-
-<A name="pn250326124731"></A><B><U><big>pn250326124731</big></U></B>
-#Start recording tcl command: 3/26/2025 12:46:11
-#Project Location: C:/Project/Working/FPGA/HOME/Lattice/Seed_Driver/Rev_4; Project name: seed_driver
-prj_project open "C:/Project/Working/FPGA/HOME/Lattice/Seed_Driver/Rev_4/seed_driver.ldf"
-pgr_project open "C:/Project/Working/FPGA/HOME/Lattice/Seed_Driver/Rev_4/impl1/impl1.xcf"
-pgr_program run
-pgr_project save "C:/Project/Working/FPGA/HOME/Lattice/Seed_Driver/Rev_4/impl1/impl1.xcf"
-prj_project close
-#Stop recording: 3/26/2025 12:47:31
-
-
-
 <A name="pn250331075429"></A><B><U><big>pn250331075429</big></U></B>
 #Start recording tcl command: 3/31/2025 07:42:23
 #Project Location: C:/Project/Working/FPGA/HOME/Lattice/Seed_Driver/Rev_4; Project name: seed_driver
@@ -119,47 +86,6 @@ prj_project close
 
 
 
-<A name="pn250703095020"></A><B><U><big>pn250703095020</big></U></B>
-#Start recording tcl command: 7/3/2025 09:49:44
-#Project Location: G:/CURRENT-WORK/openwater/motion-seed-fpga; Project name: seed_driver
-prj_project open "G:/CURRENT-WORK/openwater/motion-seed-fpga/seed_driver.ldf"
-prj_run Export -impl impl1 -forceAll
-prj_project close
-#Stop recording: 7/3/2025 09:50:20
-
-
-
-<A name="pn250708114328"></A><B><U><big>pn250708114328</big></U></B>
-#Start recording tcl command: 7/8/2025 11:37:36
-#Project Location: G:/CURRENT-WORK/openwater/motion-seed-fpga; Project name: seed_driver
-prj_project open "G:/CURRENT-WORK/openwater/motion-seed-fpga/seed_driver.ldf"
-prj_run Export -impl impl1 -forceAll
-pgr_project open "G:/CURRENT-WORK/openwater/motion-seed-fpga/impl1/impl1.xcf"
-prj_src remove "G:/CURRENT-WORK/openwater/motion-seed-fpga/TestBench/TestBench.spf"
-prj_src remove "G:/CURRENT-WORK/openwater/motion-seed-fpga/impl1/impl1.xcf"
-prj_run Export -impl impl1 -forceAll
-pgr_project close
-pgr_project save "G:/CURRENT-WORK/openwater/motion-seed-fpga/impl1/impl1.xcf"
-prj_src add -exclude "G:/CURRENT-WORK/openwater/motion-seed-fpga/impl1/impl1.xcf"
-prj_src enable "G:/CURRENT-WORK/openwater/motion-seed-fpga/impl1/impl1.xcf"
-pgr_program run
-pgr_project close
-prj_run Export -impl impl1 -forceAll
-pgr_project open "G:/CURRENT-WORK/openwater/motion-seed-fpga/impl1/impl1.xcf"
-prj_src remove "G:/CURRENT-WORK/openwater/motion-seed-fpga/impl1/impl1.xcf"
-pgr_project close
-pgr_project save "G:/CURRENT-WORK/openwater/motion-seed-fpga/impl1/impl1.xcf"
-prj_src add -exclude "G:/CURRENT-WORK/openwater/motion-seed-fpga/impl1/impl1.xcf"
-prj_src enable "G:/CURRENT-WORK/openwater/motion-seed-fpga/impl1/impl1.xcf"
-pgr_program run
-pgr_program run
-pgr_project save "G:/CURRENT-WORK/openwater/motion-seed-fpga/impl1/impl1.xcf"
-prj_project save
-prj_project close
-#Stop recording: 7/8/2025 11:43:28
-
-
-
 <A name="pn251103140732"></A><B><U><big>pn251103140732</big></U></B>
 #Start recording tcl command: 11/3/2025 13:57:32
 #Project Location: E:/CURRENT-WORK/openwater/motion-seed-fpga; Project name: seed_driver
@@ -192,6 +118,19 @@ prj_project open "E:/CURRENT-WORK/openwater/motion-seed-fpga/seed_driver.ldf"
 prj_run Synthesis -impl impl1 -forceAll
 prj_project close
 #Stop recording: 11/3/2025 16:20:01
+
+
+
+<A name="pn251103163032"></A><B><U><big>pn251103163032</big></U></B>
+#Start recording tcl command: 11/3/2025 16:28:22
+#Project Location: E:/CURRENT-WORK/openwater/motion-seed-fpga; Project name: seed_driver
+prj_project open "E:/CURRENT-WORK/openwater/motion-seed-fpga/seed_driver.ldf"
+prj_src remove "E:/CURRENT-WORK/openwater/motion-seed-fpga/TestBench/TestBench.spf"
+prj_src remove "E:/CURRENT-WORK/openwater/motion-seed-fpga/impl1/impl1.xcf"
+prj_run Export -impl impl1 -forceAll
+prj_project save
+prj_project close
+#Stop recording: 11/3/2025 16:30:32
 
 
 
