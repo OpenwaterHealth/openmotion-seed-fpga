@@ -39,16 +39,10 @@
         <Source name="PLL.ipx" type="IPX_Module" type_short="IPX">
             <Options/>
         </Source>
-        <Source name="impl1/impl1.xcf" type="Programming Project File" type_short="Programming">
-            <Options/>
-        </Source>
         <Source name="seed_driver.ldc" type="LSE Design Constraints File" type_short="LDC" excluded="TRUE">
             <Options/>
         </Source>
         <Source name="seed_driver.lpf" type="Logic Preference" type_short="LPF">
-            <Options/>
-        </Source>
-        <Source name="TestBench/TestBench.spf" type="Simulation Project File" type_short="SPF">
             <Options/>
         </Source>
     </Implementation>
