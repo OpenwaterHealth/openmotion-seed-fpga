@@ -93,15 +93,16 @@ always @ (posedge clk or negedge rstn) begin
 	    count <= 0;
 	    update_count <= 0;
 		dds_gain <=0;
-		cw_gain <= 16'h088a;
+		//cw_gain <= 16'h0839;        // current @ 140mA version 0.1
+		cw_gain <= 16'h06c1;        // current @ 140mA version 0.2
 		dds_gain <=0;
 		dds_gain_update <=0;
 		cw_gain_update <=0;
 		dds_current_limit_update <=0;
 		cw_current_limit_update <=0;
 		
-		dds_current_limit <=16'he77b;    // Limit 80mA
-		cw_current_limit <= 16'h1d12;    // limit 160mA
+		dds_current_limit <=16'h03dc;    // Limit 80mA
+		cw_current_limit <= 16'h07b7;    // limit 160mA
 	    modulate_frequency_temp <= 28'h012000;		// 0x015000; 0x010000 = 250uS
 	    modulate_phrase_temp <= 14'h0;
 		dds_mon_current_limit <=0;

@@ -73,10 +73,10 @@ always @(posedge clk or negedge rstn) begin
     begin
           if (!rstn) begin
                dds_gain_reg <= 16'h0;
-             //  dds_gain_reg <= 16'h3050;
-               cw_gain_reg <= 16'h088a;
+            //   cw_gain_reg <= 16'h0839;    // Revision 0.1
+               cw_gain_reg <= 16'h06c1;    // Revision 0.2
                dds_gain_d1 <= 16'h0;
-               cw_gain_d1 <= 16'h088a;
+               cw_gain_d1 <= 16'h06c1;
                dds_gain_update_d1 <= 0;
                cw_gain_update_d1 <= 0;
           end else begin
@@ -87,9 +87,6 @@ always @(posedge clk or negedge rstn) begin
                          if (dds_gain_update_d1) begin
                              if (dds_gain_d1 < dds_current_limit_reg) begin
                                  dds_gain_reg <= dds_gain_d1;
-                               //  dds_gain_reg <= dds_gain_d1+16'ha000;			// 0xA000 + 0    = 3.187V = 150mA
-																				// 0xA000 + 1200 = 4.6V
-																				// 0xA000 + 1400 = 4.85V
                              end
                          end
                          if (cw_gain_update_d1) begin
@@ -217,8 +214,10 @@ end
 
 always @(posedge clk or negedge rstn) begin
     if (!rstn) begin
-        dds_current_limit_reg <= 16'h1072;    // Limit 80mA
-        cw_current_limit_reg <= 16'h20e5;    // limit 160mA
+        dds_current_limit_reg <= 16'h03dc;    // Limit 80mA Version 0.2
+        cw_current_limit_reg <= 16'h07b7;     // limit 160mA Version 0.2
+       // dds_current_limit_reg <= 16'h08d0;    // Limit 80mA Version 0.1
+       // cw_current_limit_reg <= 16'h08d0;     // limit 160mA Version 0.1
     end else begin
                  if (dds_current_limit_update) dds_current_limit_reg <= dds_current_limit;
                  if (cw_current_limit_update) cw_current_limit_reg <= cw_current_limit;
