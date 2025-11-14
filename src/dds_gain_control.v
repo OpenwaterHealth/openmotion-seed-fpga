@@ -74,9 +74,9 @@ always @(posedge clk or negedge rstn) begin
           if (!rstn) begin
                dds_gain_reg <= 16'h0;
             //   cw_gain_reg <= 16'h0839;    // Revision 0.1
-               cw_gain_reg <= 16'h06c1;    // Revision 0.2
+               cw_gain_reg <= 16'h07f5;    // Revision 0.2
                dds_gain_d1 <= 16'h0;
-               cw_gain_d1 <= 16'h06c1;
+               cw_gain_d1 <= 16'h07f5;
                dds_gain_update_d1 <= 0;
                cw_gain_update_d1 <= 0;
           end else begin
@@ -215,7 +215,7 @@ end
 always @(posedge clk or negedge rstn) begin
     if (!rstn) begin
         dds_current_limit_reg <= 16'h03dc;    // Limit 80mA Version 0.2
-        cw_current_limit_reg <= 16'h07b7;     // limit 160mA Version 0.2
+        cw_current_limit_reg <= 16'h08c0;     // limit 160mA Version 0.2
        // dds_current_limit_reg <= 16'h08d0;    // Limit 80mA Version 0.1
        // cw_current_limit_reg <= 16'h08d0;     // limit 160mA Version 0.1
     end else begin
