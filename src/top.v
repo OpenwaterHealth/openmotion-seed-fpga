@@ -171,8 +171,8 @@ assign status = {4'h0,system_reset_n,laser_active,seed_compared,over_current_lim
 
 assign buf_rstn = rstn  & system_reset_n;
 assign seed_reset_n = 1;
-assign revision = 8'h7;
-assign minor    = 8'h0;
+assign revision = 8'h0;
+assign minor    = 8'h1;
 assign major    = 8'h0;
 assign ID       = 8'h1;
 
