@@ -1,6 +1,6 @@
 BLOCK RESETPATHS ;
 BLOCK ASYNCPATHS ;
-LOCATE COMP "clk_10mhz" SITE "1" ;
+
 LOCATE COMP "heartbeat_n" SITE "51" ;
 LOCATE COMP "mcu_gpio" SITE "59" ;
 LOCATE COMP "spare_led1_n" SITE "60" ;
@@ -26,10 +26,11 @@ LOCATE COMP "seed_adc_sck" SITE "15" ;
 LOCATE COMP "seed_mod_sck" SITE "30" ;
 LOCATE COMP "seed_mod_ss" SITE "32" ;
 LOCATE COMP "seed_mod_mosi" SITE "29" ;
-LOCATE COMP "seed_laser_disable" SITE "17" ;
 LOCATE COMP "seed_reset_n" SITE "25" ;
 LOCATE COMP "seed_dac_ss" SITE "21" ;
 LOCATE COMP "seed_spare2" SITE "81" ;
 LOCATE COMP "seed_adc_sdo1" SITE "10" ;
 LOCATE COMP "seed_adc_sdo2" SITE "14" ;
 LOCATE COMP "seed_compared" SITE "28" ;
+
+SYSCONFIG I2C_PORT=ENABLE ;

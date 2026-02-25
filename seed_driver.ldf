@@ -39,6 +39,9 @@
         <Source name="PLL.ipx" type="IPX_Module" type_short="IPX">
             <Options/>
         </Source>
+        <Source name="efb_i2c.ipx" type="IPX_Module" type_short="IPX">
+            <Options/>
+        </Source>
         <Source name="seed_driver.ldc" type="LSE Design Constraints File" type_short="LDC" excluded="TRUE">
             <Options/>
         </Source>

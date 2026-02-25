@@ -23,6 +23,8 @@ module top(
 
     input     clk_25mhz,              	// Pin 1
 	
+	input 	  scl_cfg,
+	inout	  sda_cfg,
 	output    seed_mod_mosi,        	// Pin 29    
 	output    seed_mod_sck,         	// Pin 30
 	output    seed_mod_ss,          	// Pin 32
@@ -171,8 +173,8 @@ assign status = {4'h0,system_reset_n,laser_active,seed_compared,over_current_lim
 
 assign buf_rstn = rstn  & system_reset_n;
 assign seed_reset_n = 1;
-assign revision = 8'h0;
-assign minor    = 8'h1;
+assign revision = 8'h8;
+assign minor    = 8'h0;
 assign major    = 8'h0;
 assign ID       = 8'h1;
 
@@ -189,6 +191,31 @@ PLL PLL(
     .CLKOP  (buf_clk),
     .CLKOS  (clkx2),
     .LOCK   (lock)
+);
+
+	
+efb_i2c efb_inst (
+	// Wishbone clock (MANDATORY)
+	.wb_clk_i(clk_25mhz),
+	.wb_rst_i(1'b0),
+
+	// Wishbone interface (unused, but must exist)
+	.wb_stb_i(1'b0),
+	.wb_cyc_i(1'b0),
+	.wb_we_i(1'b0),
+	.wb_adr_i(8'b0),
+	.wb_dat_i(8'b0),
+
+	// Outputs (unused)
+	.wb_ack_o(),
+	.wb_dat_o(),
+	.i2c1_irqo(),
+
+	// I2C pins
+	.i2c1_scl(scl_cfg),
+	.i2c1_sda(sda_cfg)
+
+	// SPI / Timer / UART ports can be left unconnected
 );
 
 heart_beat heart_beat( 
