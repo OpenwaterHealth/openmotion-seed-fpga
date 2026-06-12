@@ -180,7 +180,7 @@ always @ (posedge clk or negedge rstn) begin
 								end
 					     8'hA : modulate_frequency_temp[7:0]    <= i2c_to_data;
 						 8'hB : modulate_frequency_temp[15:8]   <= i2c_to_data;
-					     8'hC : modulate_frequency_temp[23:0]   <= i2c_to_data;
+					     8'hC : modulate_frequency_temp[23:16]  <= i2c_to_data;
 					     8'hD : modulate_frequency_temp[31:24]  <= i2c_to_data;
 					    8'h20 : static_control[7:0]  	     	<= i2c_to_data;
 				   	    8'h21 : static_control[15:8] 		 	<= i2c_to_data;

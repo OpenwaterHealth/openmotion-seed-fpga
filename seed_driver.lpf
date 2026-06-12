@@ -32,5 +32,10 @@ LOCATE COMP "seed_spare2" SITE "81" ;
 LOCATE COMP "seed_adc_sdo1" SITE "10" ;
 LOCATE COMP "seed_adc_sdo2" SITE "14" ;
 LOCATE COMP "seed_compared" SITE "28" ;
+# Board net PULSE (the distributed laser-pulse train, shared with the TA
+# FPGA) arrives on pin 99 / PT9A - schematic 700-00010 rev 0.5 sheet 22.
+# Without this constraint the trigger input was auto-placed on an
+# unconnected ball and dds_control_interface never saw a pulse edge.
+LOCATE COMP "trigger" SITE "99" ;
 
 SYSCONFIG I2C_PORT=ENABLE ;
