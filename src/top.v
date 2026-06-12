@@ -130,6 +130,9 @@ wire clkx2;
 wire start_modulate,stop_modulate;
 wire sop,eop;
 wire test;
+wire [7:0] dbg_trigger_count;
+wire [7:0] dbg_start_count;
+wire [7:0] dbg_stop_count;
 
 assign modulate_configurate     = control[0];
 assign mcu_gpio                 = control[15];
@@ -174,7 +177,7 @@ assign status = {4'h0,system_reset_n,laser_active,seed_compared,over_current_lim
 assign buf_rstn = rstn  & system_reset_n;
 assign seed_reset_n = 1;
 assign revision = 8'h1;
-assign minor    = 8'h2;
+assign minor    = 8'h3;
 assign major    = 8'h0;
 assign ID       = 8'h1;
 
@@ -240,6 +243,9 @@ i2c_slave_top i2c_slave_top (
 	.minor 				    		(minor),
 	.major 				    		(major),
 	.ID 				    		(ID),
+	.dbg_trigger_count 				(dbg_trigger_count),
+	.dbg_start_count 				(dbg_start_count),
+	.dbg_stop_count 				(dbg_stop_count),
 
     .dds_gain 						(dds_gain),
     .cw_gain 						(cw_gain),
@@ -306,7 +312,10 @@ dds_control_interface dds_control_interface(
     .mosi               	(seed_mod_mosi),
     .ss0                	(seed_mod_ss),
     .sck                	(seed_mod_sck),
-	.data_valid_dbg     	(data_valid_dbg)
+	.data_valid_dbg     	(data_valid_dbg),
+	.dbg_trigger_count  	(dbg_trigger_count),
+	.dbg_start_count    	(dbg_start_count),
+	.dbg_stop_count     	(dbg_stop_count)
 	);
 
 

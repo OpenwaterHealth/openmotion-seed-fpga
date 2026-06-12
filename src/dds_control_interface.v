@@ -19,7 +19,12 @@ module dds_control_interface(
     output       mosi,
     output reg   ss0,
     output reg   sck,
-    output       data_valid_dbg
+    output       data_valid_dbg,
+
+    // Debug visibility for bench bring-up: counters readable over I2C
+    output reg [7:0] dbg_trigger_count,
+    output reg [7:0] dbg_start_count,
+    output reg [7:0] dbg_stop_count
 
 	);
 	
@@ -79,6 +84,21 @@ always @(posedge clk or negedge rstn) begin
                       trigger_d2 <= trigger_d;
 					  modulate_enable_d <= modulate_enable;
 		              modulate_enable_d2 <= modulate_enable_d;
+                 end
+end
+
+// Bench-debug counters: trigger rising edges as seen by this module, and
+// actual start/stop SPI writes issued (start/stop_modulate are high for
+// exactly one clk).
+always @(posedge clk or negedge rstn) begin
+		if (!rstn) begin
+             dbg_trigger_count <= 0;
+             dbg_start_count <= 0;
+             dbg_stop_count <= 0;
+        end else begin
+                      if (!trigger_d2 & trigger_d) dbg_trigger_count <= dbg_trigger_count + 1;
+                      if (start_modulate) dbg_start_count <= dbg_start_count + 1;
+                      if (stop_modulate) dbg_stop_count <= dbg_stop_count + 1;
                  end
 end
 

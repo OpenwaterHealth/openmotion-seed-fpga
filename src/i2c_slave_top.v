@@ -32,6 +32,9 @@ module i2c_slave_top(
     input [7:0]   minor,
     input [7:0]   major,
     input [7:0]   ID,
+    input [7:0]   dbg_trigger_count,
+    input [7:0]   dbg_start_count,
+    input [7:0]   dbg_stop_count,
 
     output [15:0] dds_gain,
     output [15:0] cw_gain,
@@ -99,6 +102,9 @@ registers registers(
 	.minor 				    (minor),
 	.major 				    (major),
 	.ID 				    (ID),
+	.dbg_trigger_count 		(dbg_trigger_count),
+	.dbg_start_count 		(dbg_start_count),
+	.dbg_stop_count 		(dbg_stop_count),
 
 	.dds_gain 				(dds_gain),
 	.cw_gain 				(cw_gain),

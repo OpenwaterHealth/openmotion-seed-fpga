@@ -19,6 +19,9 @@ module registers(
     input [7:0]     	minor,
     input [7:0]     	major,
     input [7:0]     	ID,
+    input [7:0]     	dbg_trigger_count,
+    input [7:0]     	dbg_start_count,
+    input [7:0]     	dbg_stop_count,
 
 
     output reg [15:0] dds_gain,
@@ -226,6 +229,9 @@ always @ (posedge clk or negedge rstn) begin
 					 8'h14 : data_out <= minor;
 					 8'h15 : data_out <= major;
 					 8'h16 : data_out <= ID;
+					 8'h17 : data_out <= dbg_trigger_count;
+					 8'h18 : data_out <= dbg_start_count;
+					 8'h19 : data_out <= dbg_stop_count;
 
 					 8'h20 : data_out <= static_control[7:0];
 					 8'h21 : data_out <= static_control[15:8];
