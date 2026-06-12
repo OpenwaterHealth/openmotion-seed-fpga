@@ -287,7 +287,12 @@ dds_control_interface dds_control_interface(
     .clk_d2                	(buf_clk),
     .clk                	(clkx2),
 
-    .trigger        	  	(trigger),
+    // Board net PULSE is active-LOW (the console asserts its trigger low,
+    // see nTRIG). dds_control_interface expects active-high: start the DDS
+    // on the laser-pulse leading edge, stop on the trailing edge. Bench
+    // 2026-06-12: without this inversion, modulation ran only BETWEEN
+    // pulses (configure-strobe windows never covered a pulse).
+    .trigger        	  	(!trigger),
     .modulate_configurate 	(modulate_configurate),
     .modulate_enable      	(modulate_enable),
     .modulate_frequency   	(modulate_frequency),
