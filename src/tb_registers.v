@@ -67,7 +67,7 @@ module tb_registers;
         if (cw_gain_update)  cw_gain_update_cnt  = cw_gain_update_cnt  + 1;
     end
 
-    task check8(input [127:0] name, input [7:0] got, input [7:0] exp);
+    task check8(input [255:0] name, input [7:0] got, input [7:0] exp);
         begin
             if (got !== exp) begin
                 errors = errors + 1;
@@ -76,7 +76,7 @@ module tb_registers;
         end
     endtask
 
-    task check16(input [127:0] name, input [15:0] got, input [15:0] exp);
+    task check16(input [255:0] name, input [15:0] got, input [15:0] exp);
         begin
             if (got !== exp) begin
                 errors = errors + 1;
@@ -124,6 +124,52 @@ module tb_registers;
         check8("char_rd_0x02", rbuf[0], 8'h11);
         check8("char_rd_0x03", rbuf[1], 8'h22);
         check8("char_rd_0x04", rbuf[2], 8'h33);
+
+        // T1: dds_gain round-trip + update fires
+        wbuf = '{8'hAD, 8'hDE};                  // 0x02<=AD, 0x03<=DE
+        dds_gain_update_cnt = 0;
+        MASTER.i2c_write(SLAVE, 8'h02, 2, wbuf);
+        repeat (50) @(posedge clk);
+        check16("T1 dds_gain", dds_gain, 16'hDEAD);
+        if (dds_gain_update_cnt < 1) begin
+            errors = errors + 1; $display("FAIL T1 dds_gain_update did not fire");
+        end else $display("PASS T1 dds_gain_update fired %0d", dds_gain_update_cnt);
+
+        // T2: back-to-back DDS gain then CW gain -> BOTH updates must fire
+        dds_gain_update_cnt = 0; cw_gain_update_cnt = 0;
+        wbuf = '{8'h01, 8'h02};                  // dds_gain <= 0x0201
+        MASTER.i2c_write(SLAVE, 8'h02, 2, wbuf);
+        wbuf = '{8'h03, 8'h04};                  // cw_gain  <= 0x0403
+        MASTER.i2c_write(SLAVE, 8'h04, 2, wbuf);
+        repeat (50) @(posedge clk);
+        if (dds_gain_update_cnt < 1 || cw_gain_update_cnt < 1) begin
+            errors = errors + 1;
+            $display("FAIL T2 lost update: dds=%0d cw=%0d",
+                     dds_gain_update_cnt, cw_gain_update_cnt);
+        end else $display("PASS T2 both updates fired dds=%0d cw=%0d",
+                          dds_gain_update_cnt, cw_gain_update_cnt);
+
+        // T3: modulate_frequency 4-byte round-trip (slice-bug reproducer)
+        wbuf = '{8'h78, 8'h56, 8'h34, 8'h02};    // 0xA..0xD -> 0x0234_5678 (28-bit)
+        MASTER.i2c_write(SLAVE, 8'h0A, 4, wbuf);
+        repeat (50) @(posedge clk);
+        check16("T3 freq[15:0]",  modulate_frequency[15:0],  16'h5678);
+        check16("T3 freq[27:16]", {4'h0, modulate_frequency[27:16]}, 16'h0234);
+
+        // T4: status/ID block auto-increment read
+        rbuf = '{8'h00, 8'h00, 8'h00, 8'h00, 8'h00};
+        MASTER.i2c_read(SLAVE, 8'h12, 5, rbuf);  // status,rev,minor,major,ID
+        check8("T4 status",   rbuf[0], status);
+        check8("T4 revision", rbuf[1], 8'h01);
+        check8("T4 minor",    rbuf[2], 8'h01);
+        check8("T4 major",    rbuf[3], 8'h00);
+        check8("T4 ID",       rbuf[4], 8'h01);
+
+        // T5: control one-shot self-clears
+        wbuf = '{8'h01, 8'h00};                  // control <= 0x0001
+        MASTER.i2c_write(SLAVE, 8'h22, 2, wbuf);
+        repeat (60) @(posedge clk);
+        check16("T5 control_cleared", control, 16'h0000);
 
         $display("ERRORS=%0d", errors);
         $finish;
