@@ -84,6 +84,11 @@ module tb_registers;
         $dumpfile("tb_registers.vcd");
         $dumpvars(0, tb_registers);
         // reset
+        // The slave controller's FSMs reset on posedge i_rst (= posedge !rstn),
+        // so rstn must go high->low->high to generate that edge (real hardware
+        // gets it from power-on). Starting at 0 and only releasing never resets it.
+        rstn = 1'b1;
+        repeat (4) @(posedge clk);
         rstn = 1'b0;
         repeat (10) @(posedge clk);
         rstn = 1'b1;

@@ -73,4 +73,6 @@ __pycache__
 test/csr.csv
 
 # hugo files 
-documentation/hugo-files/public*
+documentation/hugo-files/public*# Icarus Verilog simulation artifacts
+*.out
+*.vcd
