@@ -3,17 +3,17 @@
 module registers(
     input               clk,
     input               rstn,
-    input               SCL,
+    input               SCL,            // unused: kept for interface compatibility
     output [7:0]        data_to_i2c,
     input               start,
-    input               stop,
+    input               stop,           // unused: kept for interface compatibility
     input               data_vld,
     input               r_w,
     input [7:0]         i2c_to_data,
     output              stretch_on,
     input [15:0]        adc_current_data,
     input [15:0]        adc_voltage_data,
-    input [7:0]         monitor_status,
+    input [7:0]         monitor_status,  // unused: kept for interface compatibility
     input [7:0]         status,
     input [7:0]         revision,
     input [7:0]         minor,
@@ -46,6 +46,9 @@ module registers(
     assign stretch_on         = 1'b0;   // stretch disabled (matches prior behaviour)
 
     reg [7:0] data_out;
+    // Output mux selected by the raw (un-synchronized) r_w on purpose: this is a
+    // combinational read-path select only, and the I2C engine re-latches i_data
+    // in its own domain. Control/FSM logic below uses the 2-FF-synced r_w_sync.
     assign data_to_i2c = (r_w) ? data_out : 8'h00;
 
     // r_w arrives from the SCL domain: 2-FF synchronize into clk
