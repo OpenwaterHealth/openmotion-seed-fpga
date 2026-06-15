@@ -1,5 +1,13 @@
 `timescale 1ns / 1ps
 // Sim-only testbench for the I2C register map. NOT part of seed_driver.ldf.
+//
+// GOLDEN MAPPING (measured 2026-06-15 against the current registers.v):
+//   - A write transaction's first byte after the slave address is the register
+//     INDEX (pointer). The first DATA byte lands at addr=INDEX, the next at
+//     INDEX+1, etc. No off-by-one.
+//   - A read transaction starts at the last-written INDEX and auto-increments.
+//   Verified: write index=0x02 data={0x11,0x22,0x33} -> reg[0x02]=0x11,
+//   reg[0x03]=0x22, reg[0x04]=0x33; dds_gain(0x02/0x03 lo/hi)=0x2211.
 module tb_registers;
 
     localparam [6:0] SLAVE = 7'h41;
@@ -104,6 +112,18 @@ module tb_registers;
         MASTER.i2c_read(SLAVE, 8'h20, 2, rbuf);
         check8("static_control_rd0", rbuf[0], 8'hCD);
         check8("static_control_rd1", rbuf[1], 8'hAB);
+
+        // Characterization: prove first-data-byte->index mapping + auto-increment.
+        // Write index 0x02 with three bytes, then read 0x02..0x04 back.
+        wbuf = '{8'h11, 8'h22, 8'h33};
+        MASTER.i2c_write(SLAVE, 8'h02, 3, wbuf);
+        repeat (50) @(posedge clk);
+        check16("char_dds_gain", dds_gain, 16'h2211);   // lo=0x02=0x11, hi=0x03=0x22
+        rbuf = '{8'h00, 8'h00, 8'h00};
+        MASTER.i2c_read(SLAVE, 8'h02, 3, rbuf);
+        check8("char_rd_0x02", rbuf[0], 8'h11);
+        check8("char_rd_0x03", rbuf[1], 8'h22);
+        check8("char_rd_0x04", rbuf[2], 8'h33);
 
         $display("ERRORS=%0d", errors);
         $finish;
