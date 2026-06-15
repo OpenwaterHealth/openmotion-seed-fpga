@@ -77,6 +77,7 @@ wire        adc_data_valid;
 wire [15:0] adc_voltage_data;
 wire [15:0] adc_current_data;
 wire [7:0]  status;
+wire [7:0]  monitor_status;
 
 wire [15:0] modulate_delay;
 wire [15:0] dds_gain;
@@ -100,6 +101,8 @@ wire [7:0]  ID;
 
 wire dds_mon_current_update;
 wire cw_mon_current_update;
+wire [15:0] dds_mon_current_limit;
+wire [15:0] cw_mon_current_limit;
 
 wire dds_gain_update;
 wire cw_gain_update;
