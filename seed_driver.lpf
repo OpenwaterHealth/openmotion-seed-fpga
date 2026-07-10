@@ -24,7 +24,12 @@ LOCATE COMP "seed_ldac_n" SITE "27" ;
 LOCATE COMP "seed_adc_convert" SITE "16" ;
 LOCATE COMP "seed_adc_sck" SITE "15" ;
 LOCATE COMP "seed_mod_sck" SITE "30" ;
-LOCATE COMP "seed_mod_ss" SITE "32" ;
+# Board net SEED_MOD_SS is pin 36 (schematic 700-00010 sheet 21/22,
+# verified DVT-1A rev 0.4 and DVT-1B rev 0.5). Site 32 is TECDAC_SDO -
+# the old constraint parked the AD9837 FSYNC forever (the DDS never
+# accepted a single SPI word on any image built from this repo) and
+# drove SS pulses into the TEC DAC readback net.
+LOCATE COMP "seed_mod_ss" SITE "36" ;
 LOCATE COMP "seed_mod_mosi" SITE "29" ;
 LOCATE COMP "seed_reset_n" SITE "25" ;
 LOCATE COMP "seed_dac_ss" SITE "21" ;
