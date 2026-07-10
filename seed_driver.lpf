@@ -24,7 +24,12 @@ LOCATE COMP "seed_ldac_n" SITE "27" ;
 LOCATE COMP "seed_adc_convert" SITE "16" ;
 LOCATE COMP "seed_adc_sck" SITE "15" ;
 LOCATE COMP "seed_mod_sck" SITE "30" ;
-LOCATE COMP "seed_mod_ss" SITE "32" ;
+# Board net SEED_MOD_SS is pin 36 (schematic 700-00010 sheet 21/22,
+# verified DVT-1A rev 0.4 and DVT-1B rev 0.5). Site 32 is TECDAC_SDO -
+# the old constraint parked the AD9837 FSYNC forever (the DDS never
+# accepted a single SPI word on any image built from this repo) and
+# drove SS pulses into the TEC DAC readback net.
+LOCATE COMP "seed_mod_ss" SITE "36" ;
 LOCATE COMP "seed_mod_mosi" SITE "29" ;
 LOCATE COMP "seed_reset_n" SITE "25" ;
 LOCATE COMP "seed_dac_ss" SITE "21" ;
@@ -32,5 +37,10 @@ LOCATE COMP "seed_spare2" SITE "81" ;
 LOCATE COMP "seed_adc_sdo1" SITE "10" ;
 LOCATE COMP "seed_adc_sdo2" SITE "14" ;
 LOCATE COMP "seed_compared" SITE "28" ;
+# Board net PULSE (the distributed laser-pulse train, shared with the TA
+# FPGA) arrives on pin 99 / PT9A - schematic 700-00010 rev 0.5 sheet 22.
+# Without this constraint the trigger input was auto-placed on an
+# unconnected ball and dds_control_interface never saw a pulse edge.
+LOCATE COMP "trigger" SITE "99" ;
 
 SYSCONFIG I2C_PORT=ENABLE ;

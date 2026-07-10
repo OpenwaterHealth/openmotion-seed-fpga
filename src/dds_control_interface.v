@@ -82,28 +82,19 @@ always @(posedge clk or negedge rstn) begin
                  end
 end
 
-always @(posedge clk_d2 or negedge rstn) begin
-		if (!rstn) begin
-             sck_d2 <= 1;
-        end else begin
-                      sck_d2 <= sck_d | ss0_temp;
-                 end
-end
-
-
-always @(negedge clk_d2 or negedge rstn) begin
-		if (!rstn) begin
-             sck_d3 <= 1;
-        end else begin
-                      sck_d3 <= sck_d2;
-                 end
-end
-
-always @(posedge clk_d2 or negedge rstn) begin
+// SCK output stays entirely in the `clk` domain. The original pipeline
+// resampled sck_d (which toggles at clk/2 = clk_d2 rate) on clk_d2 edges -
+// sampling a signal at its own toggle rate. Whether any edges survive
+// depends on the PAR-determined phase between the domains: bench-verified
+// 2026-07-09 that on rebuilt images the AD9837 SCLK pin never toggled at
+// all (start/stop counters running, pin flat at idle-high). Single-domain
+// fix: idle high, emit inverted sck_temp2 while the frame window
+// (stretched by ss0_temp_dd) is open.
+always @(posedge clk or negedge rstn) begin
 		if (!rstn) begin
              sck <= 1;
         end else begin
-                      sck <= sck_d3;
+                      sck <= (ss0_temp | ss0_temp_dd) ? 1'b1 : ~sck_temp2;
                  end
 end
 
