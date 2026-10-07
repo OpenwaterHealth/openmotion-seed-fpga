@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 `timescale 1 ns / 1 ns
 
 module openwater_i2c(
